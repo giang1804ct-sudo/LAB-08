@@ -5,28 +5,30 @@
 
 namespace TeachingDeviceManager.Models;
 
+// Thiet bi dieu khien may chieu (v2 - Da sua loi thu tu 0% va < 20%)
 public class ProjectorRemote : TeachingDevice
 {
     public int BatteryLevel { get; private set; }
 
-    public ProjectorRemote(string id, string name, int initialBattery = 100) : base(id, name)
+    public ProjectorRemote(string id, string name, int initialBattery = 100)
+        : base(id, name)
     {
         BatteryLevel = initialBattery;
     }
 
     public void UpdateBatteryLevel(int newLevel)
     {
-        // TODO: can kiem tra pin hop le tu 0 den 100 khong? Tam thoi gan luon
+        // TODO: van chua kiem tra ngoai le newLevel < 0 hoac > 100 o ban v2, dot sau sua tiep
         BatteryLevel = newLevel;
 
-        // Lỗi sinh viên: Để < 20 trước nên 0% bị rơi vào đây luôn
-        if (newLevel < 20)
-        {
-            RaiseAlert($"Remote may chieu pin yeu: {newLevel}%", AlertSeverity.Warning);
-        }
-        else if (newLevel == 0)
+        // Fix o ban v2: Kiem tra 0% truoc de khong bi dinh vao nhanh < 20%
+        if (newLevel == 0)
         {
             RaiseAlert("Remote may chieu da can kiet pin!", AlertSeverity.Critical);
+        }
+        else if (newLevel < 20)
+        {
+            RaiseAlert($"Remote may chieu pin yeu: {newLevel}%", AlertSeverity.Warning);
         }
     }
 }
