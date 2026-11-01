@@ -3,9 +3,11 @@
 // Họ tên: Đặng Thị Hương Giang
 /****************/
 
+using TeachingDeviceManager.Exceptions;
+
 namespace TeachingDeviceManager.Models;
 
-// Thiet bi dieu khien may chieu (v2 - Da sua loi thu tu 0% va < 20%)
+// Thiet bi dieu khien may chieu (v3 - Hoan thien validate ngoai le va phan loai canh bao)
 public class ProjectorRemote : TeachingDevice
 {
     public int BatteryLevel { get; private set; }
@@ -18,17 +20,27 @@ public class ProjectorRemote : TeachingDevice
 
     public void UpdateBatteryLevel(int newLevel)
     {
-        // TODO: van chua kiem tra ngoai le newLevel < 0 hoac > 100 o ban v2, dot sau sua tiep
+        // Fix o ban v3: Kiem tra pin hop le tu 0 den 100, neu sai thi nem ngoai le
+        if (newLevel < 0 || newLevel > 100)
+        {
+            throw new InvalidDeviceReadingException(Id, newLevel);
+        }
+
+        int oldLevel = BatteryLevel;
         BatteryLevel = newLevel;
 
-        // Fix o ban v2: Kiem tra 0% truoc de khong bi dinh vao nhanh < 20%
+        // Kiem tra phat sinh canh bao
         if (newLevel == 0)
         {
             RaiseAlert("Remote may chieu da can kiet pin!", AlertSeverity.Critical);
         }
         else if (newLevel < 20)
         {
-            RaiseAlert($"Remote may chieu pin yeu: {newLevel}%", AlertSeverity.Warning);
+            // Chi phat canh bao neu truoc do chua o muc yeu, hoac muc pin tiep tuc giam xuong
+            if (oldLevel >= 20 || newLevel < oldLevel)
+            {
+                RaiseAlert($"Remote may chieu pin yeu: {newLevel}%", AlertSeverity.Warning);
+            }
         }
     }
 }

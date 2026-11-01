@@ -7,12 +7,16 @@ using TeachingDeviceManager.Models;
 
 namespace TeachingDeviceManager.Services;
 
+// Lop dieu phoi dang ky su kien (v3 - Hoan thien chan dang ky trung va don dep su kien)
 public class DeviceMonitoringCoordinator : IDisposable
 {
     private readonly List<TeachingDevice> devices;
     private readonly ConsoleNotificationService notificationService;
     private readonly DeviceAuditLogger auditLogger;
     private readonly MaintenanceService maintenanceService;
+
+    // Co danh dau trang thai dang ky de tranh dang ky trung lap nhieu lan
+    private bool isSubscribed = false;
 
     public DeviceMonitoringCoordinator(
         IEnumerable<TeachingDevice> devices,
@@ -28,23 +32,38 @@ public class DeviceMonitoringCoordinator : IDisposable
 
     public void Subscribe()
     {
-        // TODO: Chua co co chan dang ky trung neu goi Subscribe() 2 lan
+        // Fix o ban v3: Neu da subscribe roi thi bo qua, khong dang ky trung cung 1 handler
+        if (isSubscribed)
+        {
+            return;
+        }
+
         foreach (var d in devices)
         {
             d.AlertRaised += notificationService.HandleAlert;
             d.AlertRaised += maintenanceService.HandleCriticalAlert;
             d.StatusChanged += auditLogger.HandleStatusChanged;
         }
+
+        isSubscribed = true;
     }
 
     public void Unsubscribe()
     {
+        // Neu chua tung subscribe thi khong can unsubscribe
+        if (!isSubscribed)
+        {
+            return;
+        }
+
         foreach (var d in devices)
         {
             d.AlertRaised -= notificationService.HandleAlert;
             d.AlertRaised -= maintenanceService.HandleCriticalAlert;
             d.StatusChanged -= auditLogger.HandleStatusChanged;
         }
+
+        isSubscribed = false;
     }
 
     public void Dispose()
